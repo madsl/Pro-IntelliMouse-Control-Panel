@@ -1,5 +1,6 @@
 import usb.core
 import usb.util
+import sys
 
 VID = 0x045E
 PID = 0x082A
@@ -26,12 +27,49 @@ READ_REPORT_LENGTH = 0x29
 
 INTERFACE = 0x01
 
+HOST_TO_DEVICE = 0x21
+DEVICE_TO_HOST = 0xA1
+GET_REPORT = 0x01
+SET_REPORT = 0x09
+FEATURE = 0x03
+INPUT = 0x01
+
 class IntelliMouse():
 	def __init__(self):
+		self.reattach = False
+
 		self.device = usb.core.find(idVendor=VID, idProduct=PID)
 		if self.device is None:
 		    raise ValueError("couldn't find the intellimouse...")
+
+		if sys.platform.startswith("linux"):
+			for config in self.device:
+				for interface in config:
+					if self.device.is_kernel_driver_active(interface.bInterfaceNumber):
+						self.device.detach_kernel_driver(interface.bInterfaceNumber)
+						self.reattach = True
+
 		self.device.set_configuration()
+
+	def __del__(self):
+		usb.util.dispose_resources(self.device)
+
+		if self.reattach:
+			for config in self.device:
+				for interface in config:
+					if not self.device.is_kernel_driver_active(interface.bInterfaceNumber):
+						self.device.attach_kernel_driver(interface.bInterfaceNumber)
+
+	def __str__(self):
+		return ("Microsoft Pro IntelliMouse \n" +
+				"* color: {}\n" +
+				"* dots per inch: {}\n" +
+				"* polling rate: {}\n" +
+				"* lift off distance: {}").format(
+					hex(self.get_color()).upper(),
+					self.get_dpi(),
+					self.get_polling_rate(),
+					self.get_lift_off_distance())
 
 	def __write_property(self, property, data):
 		if not isinstance(property, int):
@@ -39,14 +77,14 @@ class IntelliMouse():
 		if not isinstance(data, list) or not all(isinstance(x, int) for x in data):
 			raise TypeError("please make sure to pass a list of integers for the data argument...")
 		report = self.__pad_right([WRITE_REPORT_ID, property, len(data)] + data, WRITE_REPORT_LENGTH)
-		self.device.ctrl_transfer(0x21, 0x09, 0x03 << 8 | WRITE_REPORT_ID, INTERFACE, report)
+		self.device.ctrl_transfer(HOST_TO_DEVICE, SET_REPORT, FEATURE << 8 | WRITE_REPORT_ID, INTERFACE, report)
 
 	def __read_property(self, property):
 		if not isinstance(property, int):
 			raise TypeError("please make sure to pass a integer for the property argument...")
 		report = self.__pad_right([WRITE_REPORT_ID, property], WRITE_REPORT_LENGTH)
-		self.device.ctrl_transfer(0x21, 0x09, 0x03 << 8 | WRITE_REPORT_ID, INTERFACE, report)
-		result = list(self.device.ctrl_transfer(0xA1, 0x01, 0x01 << 8 | READ_REPORT_ID, INTERFACE, READ_REPORT_LENGTH))
+		self.device.ctrl_transfer(HOST_TO_DEVICE, SET_REPORT, FEATURE << 8 | WRITE_REPORT_ID, INTERFACE, report)
+		result = list(self.device.ctrl_transfer(DEVICE_TO_HOST, GET_REPORT, INPUT << 8 | READ_REPORT_ID, INTERFACE, READ_REPORT_LENGTH))
 		return result[4 : 4 + result[3]]
 
 	def __pad_right(self, data, until):
