@@ -1,64 +1,43 @@
-import usb.core
-import usb.util
+import hid
 import sys
 
-VID = 0x045E
-PID = 0x082A
-
-DISTANCE_WRITE_PROPERTY  = 0xB8
-DISTANCE_READ_PROPERTY  = DISTANCE_WRITE_PROPERTY - 0x02
-POLLING_WRITE_PROPERTY = 0x83
-POLLING_READ_PROPERTY = POLLING_WRITE_PROPERTY + 0x01
-COLOR_WRITE_PROPERTY = 0xB2
-COLOR_READ_PROPERTY = COLOR_WRITE_PROPERTY + 0x01
-DPI_WRITE_PROPERTY = 0x96
-DPI_READ_PROPERTY = DPI_WRITE_PROPERTY + 0x01
-
-POLLING_MAPPING = { 0x02: 125, 0x01: 500, 0x00: 1000}
-POLLING_MAPPING_INVERSE = dict(zip(POLLING_MAPPING.values(), POLLING_MAPPING.keys()))
-
-DISTANCE_MAPPING = { 0x00: 2, 0x01: 3 }
-DISTANCE_MAPPING_INVERSE = dict(zip(DISTANCE_MAPPING.values(), DISTANCE_MAPPING.keys()))
-
-WRITE_REPORT_ID = 0x24
-WRITE_REPORT_LENGTH = 0x49
-READ_REPORT_ID = 0x27
-READ_REPORT_LENGTH = 0x29
-
-INTERFACE = 0x01
-
-HOST_TO_DEVICE = 0x21
-DEVICE_TO_HOST = 0xA1
-GET_REPORT = 0x01
-SET_REPORT = 0x09
-FEATURE = 0x03
-INPUT = 0x01
-
 class IntelliMouse():
+	__VID = 0x045E
+	__PID = 0x082A
+
+	__DISTANCE_WRITE_PROPERTY  = 0xB8
+	__DISTANCE_READ_PROPERTY  = __DISTANCE_WRITE_PROPERTY - 0x02
+	__POLLING_WRITE_PROPERTY = 0x83
+	__POLLING_READ_PROPERTY = __POLLING_WRITE_PROPERTY + 0x01
+	__COLOR_WRITE_PROPERTY = 0xB2
+	__COLOR_READ_PROPERTY = __COLOR_WRITE_PROPERTY + 0x01
+	__DPI_WRITE_PROPERTY = 0x96
+	__DPI_READ_PROPERTY = __DPI_WRITE_PROPERTY + 0x01
+
+	__POLLING_MAPPING = { 0x02: 125, 0x01: 500, 0x00: 1000}
+	__POLLING_MAPPING_INVERSE = dict(zip(__POLLING_MAPPING.values(), __POLLING_MAPPING.keys()))
+
+	__DISTANCE_MAPPING = { 0x00: 2, 0x01: 3 }
+	__DISTANCE_MAPPING_INVERSE = dict(zip(__DISTANCE_MAPPING.values(), __DISTANCE_MAPPING.keys()))
+
+	__WRITE_REPORT_ID = 0x24
+	__WRITE_REPORT_LENGTH = 0x49
+	__READ_REPORT_ID = 0x27
+	__READ_REPORT_LENGTH = 0x29
+
+	__INTERFACE = 0x01
+
+
 	def __init__(self):
-		self.reattach = False
+		usage_pages = [usage_page for usage_page in hid.enumerate(self.__VID, self.__PID) if usage_page.get("interface_number") == self.__INTERFACE]
+		if not usage_pages:
+			raise ValueError("couldn't find the intellimouse...")
 
-		self.device = usb.core.find(idVendor=VID, idProduct=PID)
-		if self.device is None:
-		    raise ValueError("couldn't find the intellimouse...")
-
-		if sys.platform.startswith("linux"):
-			for config in self.device:
-				for interface in config:
-					if self.device.is_kernel_driver_active(interface.bInterfaceNumber):
-						self.device.detach_kernel_driver(interface.bInterfaceNumber)
-						self.reattach = True
-
-		self.device.set_configuration()
+		self.__device = hid.device()
+		self.__device.open_path(usage_pages[0]["path"])
 
 	def __del__(self):
-		usb.util.dispose_resources(self.device)
-
-		if self.reattach:
-			for config in self.device:
-				for interface in config:
-					if not self.device.is_kernel_driver_active(interface.bInterfaceNumber):
-						self.device.attach_kernel_driver(interface.bInterfaceNumber)
+		self.__device.close()
 
 	def __str__(self):
 		return ("Microsoft Pro IntelliMouse \n" +
@@ -76,15 +55,15 @@ class IntelliMouse():
 			raise TypeError("please make sure to pass a integer for the property argument...")
 		if not isinstance(data, list) or not all(isinstance(x, int) for x in data):
 			raise TypeError("please make sure to pass a list of integers for the data argument...")
-		report = self.__pad_right([WRITE_REPORT_ID, property, len(data)] + data, WRITE_REPORT_LENGTH)
-		self.device.ctrl_transfer(HOST_TO_DEVICE, SET_REPORT, FEATURE << 8 | WRITE_REPORT_ID, INTERFACE, report)
+		report = self.__pad_right([self.__WRITE_REPORT_ID, property, len(data)] + data, self.__WRITE_REPORT_LENGTH)
+		self.__device.send_feature_report(report)
 
 	def __read_property(self, property):
 		if not isinstance(property, int):
 			raise TypeError("please make sure to pass a integer for the property argument...")
-		report = self.__pad_right([WRITE_REPORT_ID, property], WRITE_REPORT_LENGTH)
-		self.device.ctrl_transfer(HOST_TO_DEVICE, SET_REPORT, FEATURE << 8 | WRITE_REPORT_ID, INTERFACE, report)
-		result = list(self.device.ctrl_transfer(DEVICE_TO_HOST, GET_REPORT, INPUT << 8 | READ_REPORT_ID, INTERFACE, READ_REPORT_LENGTH))
+		report = self.__pad_right([self.__WRITE_REPORT_ID, property], self.__WRITE_REPORT_LENGTH)
+		self.__device.send_feature_report(report)
+		result = self.__device.get_input_report(self.__READ_REPORT_ID, self.__READ_REPORT_LENGTH)
 		return result[4 : 4 + result[3]]
 
 	def __pad_right(self, data, until):
@@ -99,40 +78,40 @@ class IntelliMouse():
 		return data + ((until - len(data)) * [0x00])
 
 	def get_color(self):
-		return int.from_bytes(self.__read_property(COLOR_READ_PROPERTY), byteorder='big')
+		return int.from_bytes(self.__read_property(self.__COLOR_READ_PROPERTY), byteorder='big')
 
 	def set_color(self, color):
 		if not isinstance(color, int):
 			raise TypeError("please make sure to pass an integer...")
 		color = 0xFFFFFF & color
-		self.__write_property(COLOR_WRITE_PROPERTY, list(color.to_bytes(3, byteorder="big")))
+		self.__write_property(self.__COLOR_WRITE_PROPERTY, list(color.to_bytes(3, byteorder="big")))
 
 	def get_dpi(self):
-		return int.from_bytes(self.__read_property(DPI_READ_PROPERTY), byteorder='little')
+		return int.from_bytes(self.__read_property(self.__DPI_READ_PROPERTY), byteorder='little')
 
 	def set_dpi(self, dpi):
 		if not isinstance(dpi, int):
 			raise TypeError("please make sure to pass an integer...")
 		if dpi % 50 != 0 or not (dpi >= 200 and dpi <= 16000):
   			raise ValueError("please make sure to pass a valid value (dpi % 50 == 0 and (dpi >= 200 and dpi <= 16000))")
-		self.__write_property(DPI_WRITE_PROPERTY, list(dpi.to_bytes(2, byteorder="little")))
+		self.__write_property(self.__DPI_WRITE_PROPERTY, list(dpi.to_bytes(2, byteorder="little")))
 
 	def get_polling_rate(self):
-		return POLLING_MAPPING[self.__read_property(POLLING_READ_PROPERTY)[0]]
+		return self.__POLLING_MAPPING[self.__read_property(self.__POLLING_READ_PROPERTY)[0]]
 
 	def set_polling_rate(self, rate):
 		if not isinstance(rate, int):
 			raise TypeError("please make sure to pass an integer...")
 		if rate != 125 and rate != 500 and rate != 1000:
 			raise ValueError("please make sure to pass a valid value (rate == 125 or rate == 500 or rate == 1000)")
-		self.__write_property(POLLING_WRITE_PROPERTY, [POLLING_MAPPING_INVERSE[rate]])
+		self.__write_property(self.__POLLING_WRITE_PROPERTY, [self.__POLLING_MAPPING_INVERSE[rate]])
 
 	def get_lift_off_distance(self):
-		return DISTANCE_MAPPING[self.__read_property(DISTANCE_READ_PROPERTY)[0]]
+		return self.__DISTANCE_MAPPING[self.__read_property(self.__DISTANCE_READ_PROPERTY)[0]]
 
 	def set_lift_off_distance(self, distance):
 		if not isinstance(distance, int):
 			raise TypeError("please make sure to pass an integer...")
 		if distance != 2 and distance != 3:
 			raise ValueError("please make sure to pass a valid lift off distance (distance == 2 or distance == 3)")
-		self.__write_property(DISTANCE_WRITE_PROPERTY, [DISTANCE_MAPPING_INVERSE[distance]])
+		self.__write_property(self.__DISTANCE_WRITE_PROPERTY, [self.__DISTANCE_MAPPING_INVERSE[distance]])

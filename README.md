@@ -6,7 +6,7 @@ A cross-platform control panel application for the Microsoft Pro IntelliMouse.
 
 The application is build using:
 * [Python 3.7](https://www.python.org/downloads/release/python-373/) (for general programming purposes)
-* [PyUSB](https://github.com/pyusb/pyusb) (for the HID interactions)
+* [cython-hidapi](https://github.com/trezor/cython-hidapi) (for the HID interactions)
 * [PySide2](https://wiki.qt.io/Qt_for_Python) (for the GUI)
 * [fbs](https://github.com/mherrmann/fbs) (for building and packaging)
 
@@ -25,7 +25,7 @@ It doesn't (yet) allow you to configure the following settings:
 Using the control panel is simple, simply download one of the pre-built binaries and you're good to go.
 
 * Windows
-* macOS (you'll also need to perform the actions outlined [here](./macOS/kext/README.md))
+* macOS
 * Debian
 
 ## Development
@@ -49,7 +49,7 @@ deactivate
 This application is licensed under the the GPLv3 license, as dependencies of this project require it.
 
 ## Disclaimer
-All product names, trademarks and registered trademarks are property of their respective owners. All company, product and service names used in this project are for identification purposes only. Use of these names,trademarks and brands does not imply endorsement.
+All product names, trademarks and registered trademarks are property of their respective owners. All company, product and service names used in this project are for identification purposes only. Use of these names, trademarks and brands does not imply endorsement.
 
 Microsoft Pro IntelliMouse is a registered trademark or trademark of Microsoft Corporation in the United States and/or other countries.
 
