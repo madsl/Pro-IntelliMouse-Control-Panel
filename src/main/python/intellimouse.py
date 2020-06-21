@@ -26,15 +26,15 @@ class IntelliMouse():
 	__READ_REPORT_LENGTH = 0x29
 
 	__INTERFACE = 0x01
+	__USAGE_PAGE = 0xFF07
+	__USAGE = 0x212
 
-
-	def __init__(self):
-		usage_pages = [usage_page for usage_page in hid.enumerate(self.__VID, self.__PID) if usage_page.get("interface_number") == self.__INTERFACE]
-		if not usage_pages:
-			raise ValueError("couldn't find the intellimouse...")
-
+	def __init__(self):		
 		self.__device = hid.device()
-		self.__device.open_path(usage_pages[0]["path"])
+		paths = [path for path in hid.enumerate(self.__VID, self.__PID) if path.get("interface_number") == self.__INTERFACE and path.get("usage_page") == self.__USAGE_PAGE and path.get("usage") == self.__USAGE]
+		if not paths:
+			raise ValueError("couldn't find the intellimouse...")
+		self.__device.open_path(paths[0]["path"])
 
 	def __del__(self):
 		self.__device.close()

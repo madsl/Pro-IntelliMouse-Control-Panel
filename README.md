@@ -5,9 +5,9 @@ A cross-platform control panel application for the Microsoft Pro IntelliMouse.
 ![Control Panel UI](./img/control-panel-ui.png)
 
 The application is build using:
-* [Python 3.7](https://www.python.org/downloads/release/python-373/) (for general programming purposes)
+* [Python 3.6](https://www.python.org/downloads/release/python-367/) (for general programming purposes)
 * [cython-hidapi](https://github.com/trezor/cython-hidapi) (for the HID interactions)
-* [PySide2](https://wiki.qt.io/Qt_for_Python) (for the GUI)
+* [PyQt5](https://www.riverbankcomputing.com/software/pyqt/) (for the GUI)
 * [fbs](https://github.com/mherrmann/fbs) (for building and packaging)
 
 ## Features

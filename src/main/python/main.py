@@ -1,7 +1,7 @@
-from fbs_runtime.application_context.PySide2 import ApplicationContext
-from PySide2.QtCore import Qt
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from fbs_runtime.application_context.PyQt5 import ApplicationContext
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 from intellimouse import IntelliMouse
 import sys
 
