@@ -29,7 +29,7 @@ class IntelliMouse():
 	__USAGE_PAGE = 0xFF07
 	__USAGE = 0x212
 
-	def __init__(self):		
+	def __init__(self):
 		self.__device = hid.device()
 		paths = [path for path in hid.enumerate(self.__VID, self.__PID) if path.get("interface_number") == self.__INTERFACE and path.get("usage_page") == self.__USAGE_PAGE and path.get("usage") == self.__USAGE]
 		if not paths:
@@ -56,7 +56,9 @@ class IntelliMouse():
 		if not isinstance(data, list) or not all(isinstance(x, int) for x in data):
 			raise TypeError("please make sure to pass a list of integers for the data argument...")
 		report = self.__pad_right([self.__WRITE_REPORT_ID, property, len(data)] + data, self.__WRITE_REPORT_LENGTH)
-		self.__device.send_feature_report(report)
+		bytes_written = self.__device.send_feature_report(report)
+		if bytes_written != self.__WRITE_REPORT_LENGTH:
+			raise IOError("couldn't properly write to device, it may be detached")
 
 	def __read_property(self, property):
 		if not isinstance(property, int):
