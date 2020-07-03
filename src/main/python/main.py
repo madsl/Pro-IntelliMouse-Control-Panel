@@ -1,4 +1,7 @@
-from fbs_runtime.application_context.PyQt5 import ApplicationContext
+try:
+	from fbs_runtime.application_context.PyQt5 import ApplicationContext
+except:
+	pass
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -112,7 +115,10 @@ class MainWindow(QMainWindow):
 				self.showErrorWindow()
 
 	def showErrorWindow(self):
-		self.errorWindow = ErrorWindow(self.applicationContext.get_resource('error.png'), self)
+		try:
+			self.errorWindow = ErrorWindow(self.applicationContext.get_resource('error.png'), self)
+		except:
+			self.errorWindow = ErrorWindow('../resources/base/error.png', self)
 		self.setCentralWidget(self.errorWindow)
 		self.setFixedSize(self.sizeHint())
 		self.errorWindow.retryButton.clicked.connect(self.showAppropriateLayout)
@@ -177,7 +183,15 @@ class MainWindow(QMainWindow):
 		self.show()
 
 if __name__ == '__main__':
-	applicationContext = ApplicationContext()
+	applicationContext = None
+	try:
+		applicationContext = ApplicationContext()
+	except:
+		applicationContext = QApplication(sys.argv)
 	window = MainWindow(applicationContext)
-	exit_code = applicationContext.app.exec_()
+	exit_code = -1
+	try:
+		exit_code = applicationContext.app.exec_()
+	except:
+		exit_code = applicationContext.exec_()
 	sys.exit(exit_code)
