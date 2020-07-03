@@ -188,7 +188,8 @@ if __name__ == '__main__':
 	try:
 		applicationContext = ApplicationContext()
 	except:
-		applicationContext = QApplication('Pro IntelliMouse Control Panel')
+		sys.argv[0] = 'Control Panel for Microsoft IntelliMouse Pro'
+		applicationContext = QApplication(sys.argv)
 	window = MainWindow(applicationContext)
 	exit_code = -1
 	try:
