@@ -7,6 +7,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from intellimouse import IntelliMouse
 import sys
+import os
 
 class QIntModuloValidator(QIntValidator):
 	def __init__(self, modulo, *args, **kwargs):
@@ -118,7 +119,7 @@ class MainWindow(QMainWindow):
 		try:
 			self.errorWindow = ErrorWindow(self.applicationContext.get_resource('error.png'), self)
 		except:
-			self.errorWindow = ErrorWindow('../resources/base/error.png', self)
+			self.errorWindow = ErrorWindow(os.path.dirname(os.path.abspath(__file__)) + '/../resources/base/error.png', self)
 		self.setCentralWidget(self.errorWindow)
 		self.setFixedSize(self.sizeHint())
 		self.errorWindow.retryButton.clicked.connect(self.showAppropriateLayout)
