@@ -21,12 +21,19 @@ It doesn't (yet) allow you to configure the following settings:
 - [ ] Custom Button Mapping
 - [ ] Custom LOD Calibration
 
-## Download
-Using the control panel is simple, simply download one of the pre-built binaries and you're good to go.
+## Install
+Installing the control panel is simple, simply download one of the pre-built binaries and you're good to go.
 
 * Windows
 * macOS
 * Debian
+* Gentoo
+  * Resides in the [fol4](https://gitlab.com/madsl/fol4) overlay
+  * You can install the program by doing:
+  ```
+  layman -fa fol4
+  emerge -av app-misc/pro-intellimouse-control-panel
+  ```
 
 ## Development
 To set up a virtual environment to further develop this application, use the following commands:
