@@ -31,7 +31,11 @@ class IntelliMouse():
 
 	def __init__(self):
 		self.__device = hid.device()
-		paths = [path for path in hid.enumerate(self.__VID, self.__PID) if path.get("interface_number") == self.__INTERFACE]
+		paths = None
+		if sys.platform.startswith("win32") or sys.platform.startswith("darwin"):
+			paths = [path for path in hid.enumerate(self.__VID, self.__PID) if path.get("interface_number") == self.__INTERFACE and path.get("usage_page") == self.__USAGE_PAGE and path.get("usage") == self.__USAGE]
+		else:
+			paths = [path for path in hid.enumerate(self.__VID, self.__PID) if path.get("interface_number") == self.__INTERFACE]
 		if not paths:
 			raise ValueError("couldn't find the intellimouse...")
 		self.__device.open_path(paths[0]["path"])
