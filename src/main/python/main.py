@@ -63,7 +63,6 @@ class ConfigurationWindow(QWidget):
 
 		self.dpiLineEdit = QLineEdit()
 		self.dpiLineEdit.setToolTip('sets the dots per inch')
-		self.dpiLineEdit.setValidator(QIntModuloValidator(50, 200, 16000))
 
 		self.dpiGroupBox = QGroupBox("dots per inch")
 		self.dpiGroupBoxLayout = QVBoxLayout()
@@ -173,11 +172,14 @@ class MainWindow(QMainWindow):
 
 		def onDpiLineEditChanged():
 			try:
+				self.configurationWindow.dpiLineEdit.setValidator(QIntModuloValidator(50, 200, 16000))
 				self.configurationWindow.dpiSlider.setValue(int(self.configurationWindow.dpiLineEdit.text()))
 			except:
 				self.showErrorWindow()
+			finally:
+				self.configurationWindow.dpiLineEdit.setValidator(None)
 
-		self.configurationWindow.dpiLineEdit.textEdited.connect(lambda: onDpiLineEditChanged())
+		self.configurationWindow.dpiLineEdit.editingFinished.connect(lambda: onDpiLineEditChanged())
 
 		self.setCentralWidget(self.configurationWindow)
 		self.setFixedSize(self.sizeHint())
