@@ -22,11 +22,8 @@ It doesn't (yet) allow you to configure the following settings:
 - [ ] Custom LOD Calibration
 
 ## Install
-Installing the control panel is simple, simply download one of the pre-built binaries and you're good to go.
+Installing the control panel is simple for most operating systems, follow the instructions outlined below in the development header.
 
-* Windows
-* macOS
-* Debian
 * Gentoo
   * Resides in the [fol4](https://gitlab.com/madsl/fol4) overlay
   * You can install the program by doing:
