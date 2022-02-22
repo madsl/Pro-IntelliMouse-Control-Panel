@@ -68,6 +68,11 @@ cd intellimouse-ctl
 pip install .
 ```
 
+### Gentoo Linux
+```layman -fa fol4    (or eselect repository enable fol4)
+emerge -av intellimouse-ctl
+```
+
 ## Development
 To set up a virtual environment to further develop this tool/library, use the following commands:
 ```bash
