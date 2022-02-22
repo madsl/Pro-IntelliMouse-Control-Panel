@@ -82,6 +82,9 @@ pip install --editable .
 ```bash
 pdoc ./src/intellimouse/
 ```
+or view it over at:
+
+[https://intellimouse.visscher.codes](https://intellimouse.visscher.codes) 
 
 ### Generate
 ```bash
