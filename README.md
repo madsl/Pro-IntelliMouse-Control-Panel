@@ -69,7 +69,8 @@ pip install .
 ```
 
 ### Gentoo Linux
-```layman -fa fol4    (or eselect repository enable fol4)
+```bash
+layman -fa fol4    (or eselect repository enable fol4)
 emerge -av intellimouse-ctl
 ```
 
